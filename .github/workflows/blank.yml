@@ -1,0 +1,53 @@
+
+name: Windows Virtual PC
+
+on:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Show Windows info
+        shell: pwsh
+        run: |
+          Write-Host "Windows Virtual PC"
+          Write-Host "Starting system..."
+          Get-ComputerInfo |
+            Select-Object WindowsProductName,
+              WindowsVersion,
+              OsArchitecture
+          Write-Host "System ready"
+
+      - name: Create workspace
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory `
+            -Path "$env:RUNNER_TEMP\VirtualPC" `
+            -Force
+          Set-Location "$env:RUNNER_TEMP\VirtualPC"
+          "Virtual PC workspace" |
+            Out-File info.txt
+          Get-Content info.txt
+
+      - name: Test environment
+        shell: pwsh
+        run: |
+          Write-Host "Checking CPU..."
+          Get-CimInstance Win32_Processor |
+            Select-Object -First 1 Name
+          Write-Host "Checking memory..."
+          Get-CimInstance Win32_OperatingSystem |
+            Select-Object TotalVisibleMemorySize
+          Write-Host "Checking disk..."
+          Get-PSDrive C |
+            Select-Object Used, Free
+          Write-Host "Test completed"
+
+      - name: Finish
+        shell: pwsh
+        run: |
+          Write-Host "Windows session finished"
+          Write-Host "Runner is temporary"
